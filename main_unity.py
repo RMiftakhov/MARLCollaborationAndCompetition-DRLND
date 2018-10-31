@@ -22,8 +22,8 @@ import numpy as np
 
 class UnityWrapper():
     def __init__(self, train_mode=True):
-        #self.env = UnityEnvironment(file_name="Tennis_Windows_x86_64/Tennis.exe")
-        self.env = UnityEnvironment(file_name="Tennis_Linux_NoVis/Tennis.x86_64")
+        self.env = UnityEnvironment(file_name="Tennis_Windows_x86_64/Tennis.exe")
+        #self.env = UnityEnvironment(file_name="Tennis_Linux_NoVis/Tennis.x86_64")
         self.brain_name = self.env.brain_names[0]
         self.brain      = self.env.brains[self.brain_name]
         # reset the environment
@@ -72,7 +72,7 @@ def main():
     # change this to higher number to experiment. say 30000.
     number_of_episodes = 10000
     episode_length = 100
-    batchsize = 512
+    batchsize = 128
     # how many episodes to save policy and gif
     save_interval = 500
     t = 0
@@ -112,7 +112,7 @@ def main():
     timer = pb.ProgressBar(widgets=widget, maxval=number_of_episodes).start()
 
     # use keep_awake to keep workspace from disconnecting
-    for episode in keep_awake(range(0, number_of_episodes, parallel_envs)):
+    for episode in range(0, number_of_episodes, parallel_envs):
 
         timer.update(episode)
 
@@ -132,13 +132,14 @@ def main():
         # if save_info:
         #    frames.append(env.render('rgb_array'))
 
-        for episode_t in range(episode_length):
+        #for episode_t in range(episode_length):
+        while True:
 
             t += parallel_envs
 
             # explore = only explore for a certain number of episodes
             # action input needs to be transposed
-            actions = maddpg.act(transpose_to_tensor(obs), noise=0.0)
+            actions = maddpg.act(transpose_to_tensor(obs), noise=1.0)
             noise *= noise_reduction
 
             actions_array = torch.stack(actions).detach().numpy()
@@ -164,6 +165,8 @@ def main():
 
             obs, obs_full = next_obs, next_obs_full
 
+            if np.any(dones):  # exit loop if episode finished
+                break
         # update once after every episode_per_update
         if len(buffer) > batchsize:
             for a_i in range(2):

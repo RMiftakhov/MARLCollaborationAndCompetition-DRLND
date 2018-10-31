@@ -81,7 +81,7 @@ class MADDPG:
         #q = agent.critic(obs_full.t(), action)
 
         huber_loss = torch.nn.SmoothL1Loss()
-        critic_loss = huber_loss(q, y.detach())
+        critic_loss = huber_loss(q, y) #.detach()
         critic_loss.backward()
         #torch.nn.utils.clip_grad_norm_(agent.critic.parameters(), 0.5)
         agent.critic_optimizer.step()
